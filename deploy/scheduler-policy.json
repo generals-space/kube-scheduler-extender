@@ -1,0 +1,52 @@
+{
+    "kind": "Policy",
+    "apiVersion": "v1",
+    "predicates": [
+        {
+            "name": "NoVolumeZoneConflict"
+        },{
+            "name": "MatchInterPodAffinity"
+        }, {
+            "name": "NoDiskConflict"
+        }, {
+            "name": "GeneralPredicates"
+        }, {
+            "name": "PodToleratesNodeTaints"
+        }, {
+            "name": "CheckVolumeBinding"
+        }
+    ],
+    "priorities": [
+        {
+            "name": "SelectorSpreadPriority",
+            "weight": 1
+        }, {
+            "name": "InterPodAffinityPriority",
+            "weight": 1
+        }, {
+            "name": "LeastRequestedPriority",
+            "weight": 1
+        }, {
+            "name": "NodeAffinityPriority",
+            "weight": 1
+        }, {
+            "name": "BalancedResourceAllocation",
+            "weight": 1
+        }, {
+            "name": "NodePreferAvoidPodsPriority",
+            "weight": 10000
+        }, {
+            "name": "TaintTolerationPriority",
+            "weight": 1
+        }
+    ],
+    "extenders": [
+        {
+            "urlPrefix.wrong": "http://kube-scheduler-extender:8080/scheduler",
+            "urlPrefix": "http://kube-scheduler-extender.kube-system.svc:8080/scheduler",
+            "filterVerb": "predicates/always_true",
+            "enableHttps": false,
+            "nodeCacheCapable": false
+        }
+    ]
+}

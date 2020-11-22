@@ -1,0 +1,65 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    component: kube-scheduler
+    tier: control-plane
+  name: kube-scheduler
+  namespace: kube-system
+spec:
+  containers:
+  - command:
+    - kube-scheduler
+    - --authentication-kubeconfig=/etc/kubernetes/scheduler.conf
+    - --authorization-kubeconfig=/etc/kubernetes/scheduler.conf
+    - --bind-address=127.0.0.1
+    - --kubeconfig=/etc/kubernetes/scheduler.conf
+    - --leader-elect=true
+    ## 1. 指定配置文件路径
+    - --config=/etc/kubernetes/scheduler-config.yaml
+    - -v=5
+    image: registry.cn-hangzhou.aliyuncs.com/google_containers/kube-scheduler:v1.17.3
+    imagePullPolicy: IfNotPresent
+    livenessProbe:
+      failureThreshold: 8
+      httpGet:
+        host: 127.0.0.1
+        path: /healthz
+        port: 10251
+        scheme: HTTP
+      initialDelaySeconds: 15
+      timeoutSeconds: 15
+    name: kube-scheduler
+    resources:
+      requests:
+        cpu: 100m
+    volumeMounts:
+    ## 3. 引入配置文件
+    - mountPath: /etc/kubernetes/scheduler.conf
+      name: kubeconfig
+      readOnly: true
+    - mountPath: /etc/kubernetes/scheduler-config.yaml
+      name: scheduler-config
+      readOnly: true
+    - mountPath: /etc/kubernetes/scheduler-policy.json
+      name: scheduler-policy
+      readOnly: true
+  hostNetwork: true
+  priorityClassName: system-cluster-critical
+  dnsPolicy: ClusterFirstWithHostNet
+  volumes:
+  - hostPath:
+      path: /etc/kubernetes/scheduler.conf
+      type: FileOrCreate
+    name: kubeconfig
+  ## 2. 挂载 kube-scheduler 配置文件及调度算法配置文件
+  - hostPath:
+      path: /etc/kubernetes/scheduler-config.yaml
+      type: FileOrCreate
+    name: scheduler-config
+  - hostPath:
+      path: /etc/kubernetes/scheduler-policy.json
+      type: FileOrCreate
+    name: scheduler-policy
+status: {}
