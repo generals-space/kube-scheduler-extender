@@ -35,13 +35,15 @@ spec:
       requests:
         cpu: 100m
     volumeMounts:
-    ## 3. 引入配置文件
+    ## scheduler.conf 是原生存在的配置文件, 类似于 admin.conf, 存储着连接 apiserver 的地址和证书.
     - mountPath: /etc/kubernetes/scheduler.conf
       name: kubeconfig
       readOnly: true
+    ## 4. 引入配置文件
     - mountPath: /etc/kubernetes/scheduler-config.yaml
       name: scheduler-config
       readOnly: true
+    ## 5. 调度算法配置文件
     - mountPath: /etc/kubernetes/scheduler-policy.json
       name: scheduler-policy
       readOnly: true
@@ -53,11 +55,12 @@ spec:
       path: /etc/kubernetes/scheduler.conf
       type: FileOrCreate
     name: kubeconfig
-  ## 2. 挂载 kube-scheduler 配置文件及调度算法配置文件
+  ## 2. 挂载 kube-scheduler 配置文件
   - hostPath:
       path: /etc/kubernetes/scheduler-config.yaml
       type: FileOrCreate
     name: scheduler-config
+  ## 3. 挂载 kube-scheduler 调度算法配置文件
   - hostPath:
       path: /etc/kubernetes/scheduler-policy.json
       type: FileOrCreate
