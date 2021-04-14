@@ -17,7 +17,8 @@ import (
 
 const (
 	apiPrefix        = "/scheduler"
-	predicatesPrefix = apiPrefix + "/predicates"
+	predicatesPath = apiPrefix + "/predicates"
+	bindPath       = apiPrefix + "/bind"
 )
 
 // registPPROF 注册 pprof 页面
@@ -80,19 +81,49 @@ func PredicateWrapper(predicate schedule.Predicate) restful.RouteFunction {
 	}
 }
 
+// BindWrapper ...
+func BindWrapper() restful.RouteFunction {
+	return func(req *restful.Request, resp *restful.Response) {
+		var buf bytes.Buffer
+		body := io.TeeReader(req.Request.Body, &buf)
+
+		var extenderBindingArgs schedulerapi.ExtenderBindingArgs
+		var extenderBindingResult *schedulerapi.ExtenderBindingResult
+
+		err := json.NewDecoder(body).Decode(&extenderBindingArgs)
+		if err != nil {
+			extenderBindingResult = &schedulerapi.ExtenderBindingResult{
+				Error:       err.Error(),
+			}
+		} else {
+			extenderBindingResult = schedule.BindHandler(extenderBindingArgs)
+		}
+		resp.WriteAsJson(extenderBindingResult)
+	}
+}
+
 func main() {
 	registPPROF()
 
 	var ws *restful.WebService
 
-	ws = new(restful.WebService)
-	ws.Path(predicatesPrefix)
+	ws = &restful.WebService{}
+	ws.Path(predicatesPath)
 	predicates := schedule.ListPredicates()
 	for _, p := range predicates {
 		klog.Infof("regist route predicate: %s", p.Name)
 		path := p.Name
-		ws.Route(ws.POST(path).To(PredicateWrapper(p)))
+		ws.Route(
+			ws.POST(path).To(PredicateWrapper(p)),
+		)
 	}
+	restful.Add(ws)
+
+	ws = &restful.WebService{}
+	ws.Path(bindPath)
+	ws.Route(
+		ws.POST(bindPath).To(BindWrapper()),
+	)
 	restful.Add(ws)
 
 	http.ListenAndServe(":8080", nil)
