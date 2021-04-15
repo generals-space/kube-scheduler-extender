@@ -120,7 +120,6 @@ func main() {
 	restful.Add(ws)
 
 	ws = &restful.WebService{}
-	ws.Path(bindPath)
 	ws.Route(
 		ws.POST(bindPath).To(BindWrapper()),
 	)
