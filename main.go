@@ -16,8 +16,10 @@ import (
 )
 
 const (
-	apiPrefix        = "/scheduler"
+	apiPrefix      = "/scheduler"
 	predicatesPath = apiPrefix + "/predicates"
+	prioritiesPath = apiPrefix + "/priorities"
+	preemptionPath = apiPrefix + "/preemption"
 	bindPath       = apiPrefix + "/bind"
 )
 
@@ -93,12 +95,50 @@ func BindWrapper() restful.RouteFunction {
 		err := json.NewDecoder(body).Decode(&extenderBindingArgs)
 		if err != nil {
 			extenderBindingResult = &schedulerapi.ExtenderBindingResult{
-				Error:       err.Error(),
+				Error: err.Error(),
 			}
 		} else {
 			extenderBindingResult = schedule.BindHandler(extenderBindingArgs)
 		}
 		resp.WriteAsJson(extenderBindingResult)
+	}
+}
+
+// PreemptionWrapper ...
+func PreemptionWrapper() restful.RouteFunction {
+	return func(req *restful.Request, resp *restful.Response) {
+		var buf bytes.Buffer
+		body := io.TeeReader(req.Request.Body, &buf)
+
+		var extenderPreemptionArgs schedulerapi.ExtenderPreemptionArgs
+		var extenderPreemptionResult *schedulerapi.ExtenderPreemptionResult
+
+		err := json.NewDecoder(body).Decode(&extenderPreemptionArgs)
+		if err != nil {
+			extenderPreemptionResult = &schedulerapi.ExtenderPreemptionResult{}
+		} else {
+			extenderPreemptionResult = schedule.PreemptionHandler(extenderPreemptionArgs)
+		}
+		resp.WriteAsJson(extenderPreemptionResult)
+	}
+}
+
+// PrioritiesWrapper ...
+func PrioritiesWrapper() restful.RouteFunction {
+	return func(req *restful.Request, resp *restful.Response) {
+		var buf bytes.Buffer
+		body := io.TeeReader(req.Request.Body, &buf)
+
+		var extenderArgs schedulerapi.ExtenderArgs
+		var extenderPreemptionResult *schedulerapi.HostPriorityList
+
+		err := json.NewDecoder(body).Decode(&extenderArgs)
+		if err != nil {
+			extenderPreemptionResult = &schedulerapi.HostPriorityList{}
+		} else {
+			extenderPreemptionResult = schedule.PrioritiesHandler(extenderArgs)
+		}
+		resp.WriteAsJson(extenderPreemptionResult)
 	}
 }
 
@@ -122,6 +162,12 @@ func main() {
 	ws = &restful.WebService{}
 	ws.Route(
 		ws.POST(bindPath).To(BindWrapper()),
+	)
+	ws.Route(
+		ws.POST(prioritiesPath).To(PrioritiesWrapper()),
+	)
+	ws.Route(
+		ws.POST(preemptionPath).To(PreemptionWrapper()),
 	)
 	restful.Add(ws)
 
