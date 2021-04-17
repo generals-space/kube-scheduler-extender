@@ -32,3 +32,17 @@ cp doc/deploy/scheduler-policy.json /etc/kubernetes/scheduler-policy.json
 但是必须要先部署扩展调度器本身, 再修改`kube-scheduler`核心调度器的配置, 顺序不能颠倒. 否则调度器本身在调度时, `kube-scheduler`就会尝试向扩展调度器服务发请求, 出现了鸡生蛋蛋生鸡的情况...
 
 而且每次更新`kube-scheduler-extender`, 都要先把`kube-scheduler`的`--config`字段移除, 否则新的Pod无法创建成功.
+
+```
+go build -o kube-scheduler-extender
+```
+
+优选算法, 必须要同时定义`weight`字段.
+
+```
+couldn't create scheduler from policy: Priority for extender http://kube-scheduler-extender.kube-system.svc.cluster.local:8080/scheduler should have a positive weight applied to it
+```
+
+
+预选, 返回一个 NodeList 对象, 包含所有符合条件的 Node 对象.
+

@@ -45,8 +45,9 @@
             "urlPrefix.wrong": "http://kube-scheduler-extender:8080/scheduler",
             "urlPrefix": "http://kube-scheduler-extender.kube-system.svc:8080/scheduler",
             "filterVerb": "predicates/always_true",
-            "prioritizeVerb": "",
-            "preemptVerb": "",
+            "prioritizeVerb": "priorities",
+            "weight": 1,
+            "preemptVerb": "preemption",
             "bindVerb": "bind",
             "enableHttps": false,
             "nodeCacheCapable": false
