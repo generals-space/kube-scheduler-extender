@@ -1,5 +1,5 @@
 ## docker build -f dockerfile.dev -t registry.cn-hangzhou.aliyuncs.com/generals-kuber/kube-scheduler-extender:01-simple-v0.0.8 .
-FROM registry.cn-hangzhou.aliyuncs.com/generals-kuber/kube-scheduler-extender:01-simple-v0.0.7
+FROM registry.cn-hangzhou.aliyuncs.com/generals-kuber/kube-scheduler-extender:01-simple-v0.0.9
 
 COPY kube-scheduler-extender /kube-scheduler-extender
 RUN chmod 755 /kube-scheduler-extender
