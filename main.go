@@ -1,107 +1,43 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"io"
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	schedulerapi "k8s.io/kubernetes/pkg/scheduler/apis/extender/v1"
+	"k8s.io/klog/v2"
 
+	"github.com/generals-space/kube-scheduler-extender/pkg/k8s"
 	"github.com/generals-space/kube-scheduler-extender/pkg/route"
-	"github.com/generals-space/kube-scheduler-extender/pkg/schedule"
 )
 
 const (
 	apiPrefix      = "/scheduler"
 	predicatesPath = "/predicates"
-	prioritiesPath = "/priorities"
+	prioritizePath = "/prioritize"
 	preemptionPath = "/preemption"
 	bindPath       = "/bind"
 )
 
-// PredicateHandler ...
-func PredicateHandler(req *restful.Request, resp *restful.Response) {
-	var buf bytes.Buffer
-	body := io.TeeReader(req.Request.Body, &buf)
-
-	var extenderArgs schedulerapi.ExtenderArgs
-	var extenderFilterResult *schedulerapi.ExtenderFilterResult
-
-	err := json.NewDecoder(body).Decode(&extenderArgs)
-	if err != nil {
-		extenderFilterResult = &schedulerapi.ExtenderFilterResult{
-			Nodes:       nil,
-			FailedNodes: nil,
-			Error:       err.Error(),
-		}
-	} else {
-		extenderFilterResult = schedule.PredicateHandler(extenderArgs)
-	}
-	resp.WriteAsJson(extenderFilterResult)
-}
-
-func BindHandler(req *restful.Request, resp *restful.Response) {
-	var buf bytes.Buffer
-	body := io.TeeReader(req.Request.Body, &buf)
-
-	var extenderBindingArgs schedulerapi.ExtenderBindingArgs
-	var extenderBindingResult *schedulerapi.ExtenderBindingResult
-
-	err := json.NewDecoder(body).Decode(&extenderBindingArgs)
-	if err != nil {
-		extenderBindingResult = &schedulerapi.ExtenderBindingResult{
-			Error: err.Error(),
-		}
-	} else {
-		extenderBindingResult = schedule.BindHandler(extenderBindingArgs)
-	}
-	resp.WriteAsJson(extenderBindingResult)
-}
-
-func PreemptionHandler(req *restful.Request, resp *restful.Response) {
-	var buf bytes.Buffer
-	body := io.TeeReader(req.Request.Body, &buf)
-
-	var extenderPreemptionArgs schedulerapi.ExtenderPreemptionArgs
-	var extenderPreemptionResult *schedulerapi.ExtenderPreemptionResult
-
-	err := json.NewDecoder(body).Decode(&extenderPreemptionArgs)
-	if err != nil {
-		extenderPreemptionResult = &schedulerapi.ExtenderPreemptionResult{}
-	} else {
-		extenderPreemptionResult = schedule.PreemptionHandler(extenderPreemptionArgs)
-	}
-	resp.WriteAsJson(extenderPreemptionResult)
-}
-
-func PrioritiesHandler(req *restful.Request, resp *restful.Response) {
-	var buf bytes.Buffer
-	body := io.TeeReader(req.Request.Body, &buf)
-
-	var extenderArgs schedulerapi.ExtenderArgs
-	var extenderPreemptionResult *schedulerapi.HostPriorityList
-
-	err := json.NewDecoder(body).Decode(&extenderArgs)
-	if err != nil {
-		extenderPreemptionResult = &schedulerapi.HostPriorityList{}
-	} else {
-		extenderPreemptionResult = schedule.PrioritiesHandler(extenderArgs)
-	}
-	resp.WriteAsJson(extenderPreemptionResult)
-}
-
 func main() {
+	klog.Infof("init kube client")
+	k8s.InitKubeClient()
+
+	klog.Infof("regist pprof handler")
 	route.RegistPPROF()
 
+	klog.Infof("regist schedule extender handler")
 	ws := &restful.WebService{}
 	ws.Path(apiPrefix)
-	ws.Route(ws.POST(predicatesPath).To(PredicateHandler))
-	ws.Route(ws.POST(prioritiesPath).To(PrioritiesHandler))
-	ws.Route(ws.POST(bindPath).To(BindHandler))
-	ws.Route(ws.POST(preemptionPath).To(PreemptionHandler))
+	// 预选过滤接口
+	ws.Route(ws.POST(predicatesPath).To(route.PredicateHandler))
+	// 优选打分接口
+	ws.Route(ws.POST(prioritizePath).To(route.PrioritizeHandler))
+	ws.Route(ws.POST(preemptionPath).To(route.PreemptionHandler))
+	// 当核心 scheduler 调度器确定 Node 与 Pod 时的回调接口,
+	// 核心调度器会把即将绑定的一对 Pod 与 Node 发送到这个接口.
+	ws.Route(ws.POST(bindPath).To(route.BindHandler))
 	restful.Add(ws)
 
+	klog.Infof("start listening")
 	http.ListenAndServe(":8080", nil)
 }

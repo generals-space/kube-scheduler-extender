@@ -7,12 +7,12 @@ import (
 	"github.com/emicklei/go-restful"
 )
 
-// RegistPPROF 注册 pprof 页面
+// RegistPPROF 注册 pprof 调试页面
 func RegistPPROF() {
-	// 一个 WebService 表示一个前缀对象, 比如 /user, 通过 Path() 方法设置.
+	// 一个 WebService 表示一个前缀对象, 通过 Path() 方法设置.
 	// 之后可以通过 ws.Route() 在这个前缀下添加各种操作.
+	// 比如下面的几个子接口, 应该是 /debug/profile, /debug/symbol ...
 	pprofBasePath := "/debug"
-	// 设置 pprof 的基本路径前缀
 	ws := new(restful.WebService).Path(pprofBasePath)
 
 	handlePprofEndpoint := func(req *restful.Request, resp *restful.Response) {

@@ -6,6 +6,7 @@ require (
 	github.com/emicklei/go-restful v2.9.5+incompatible
 	k8s.io/api v0.17.3
 	k8s.io/apimachinery v0.17.3
+	k8s.io/client-go v0.17.3
 	k8s.io/klog v1.0.0
 	k8s.io/klog/v2 v2.2.0
 	k8s.io/kubernetes v1.17.3

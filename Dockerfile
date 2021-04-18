@@ -1,4 +1,4 @@
-## docker build -t registry.cn-hangzhou.aliyuncs.com/generals-kuber/kube-scheduler-extender:01-simple-v0.0.1 .
+## docker build -t registry.cn-hangzhou.aliyuncs.com/generals-kuber/kube-scheduler-extender:v0.0.1 .
 
 FROM golang:1.13 as builder
 WORKDIR /app
@@ -13,4 +13,3 @@ FROM registry.cn-hangzhou.aliyuncs.com/generals-space/centos7
 
 COPY --from=builder /app/kube-scheduler-extender /
 RUN chmod 755 /kube-scheduler-extender
-
