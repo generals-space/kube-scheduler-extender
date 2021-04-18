@@ -40,6 +40,8 @@
 couldn't create scheduler from policy: Priority for extender http://kube-scheduler-extender.kube-system.svc.cluster.local:8080/scheduler should have a positive weight applied to it
 ```
 
+另外, 当 k8s 集群为单节点时, 优选接口是没有意义的. 当经过预选阶段后, 如果只剩下一个 Node 节点, 那么核心 scheduler 调度器也不会再进入优选阶段. 即不再请求扩展调度器的优选接口.
+
 ## preemptVerb 抢占
 
 本工程中没有提到Preemption(抢占)阶段, 因为目前还没有研究过, 可见参考文章2.
